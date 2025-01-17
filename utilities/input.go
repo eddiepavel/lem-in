@@ -31,7 +31,13 @@ type Graph struct {
 
 func ParseInput(file string) (int, *Graph, error) {
 	graph := &Graph{Rooms: make(map[string]*Room)} // Create a graph to store rooms and connections (farm)
-	var ants int                                   // Store the number of ants
+	var ants int
+	var flag bool
+	var StartingRooms int
+	var EndingRooms int
+	var ExtraRooms int
+	var tunels int
+	FirstFlag := true // Flag so we know the extra rooms befor ##StartRooms
 
 	f, err := os.Open(file)
 	if err != nil {
@@ -43,21 +49,36 @@ func ParseInput(file string) (int, *Graph, error) {
 	phase := "ants" // First phase is parsing the number of ants
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text()) // Remove leading/trailing whitespace
-		if strings.HasPrefix(line, "#") {         // Ignore comments
-			if line == "##start" || line == "##end" { // Rroom phases (##start or ##end)
 
-				phase = line
-			}
-			continue
+		//if strings.HasPrefix(line, "#") {          Ignore comments
+		if line == "##start" { // Rroom phases (##start or ##end)
+			FirstFlag = false // First time to start so we are done with extra rooms
+
+			phase = "start-end"
+		} else if line == "##end" {
+
+			phase = "start-end"
 		}
+
+		//}
 
 		switch phase {
 		case "ants":
-			fmt.Sscanf(line, "%d", &ants) // Parse the number of ants
-			phase = "rooms"               // Go to parsing rooms
+
+			_, err := fmt.Sscanf(line, "%d", &ants) // Parse the number of ants
+			if err != nil || ants <= 0 {
+				return 0, nil, errors.New("error: invalid number of ants")
+
+			}
+
+			phase = "rooms" // Go to parsing rooms
+			continue
+
 		case "rooms":
+
 			if strings.Contains(line, "-") { // If the line contains "-", it's a link --> switch to link parsing
-				phase = "links"
+				tunels++
+
 				parts := strings.Split(line, "-")
 				if len(parts) != 2 {
 					return 0, nil, errors.New("ERROR: Invalid link format")
@@ -66,35 +87,42 @@ func ParseInput(file string) (int, *Graph, error) {
 				//add come and go conections
 				graph.Rooms[room1].Neighbors = append(graph.Rooms[room1].Neighbors, graph.Rooms[room2])
 				graph.Rooms[room2].Neighbors = append(graph.Rooms[room2].Neighbors, graph.Rooms[room1])
-			} else { // Parse a room
-				parts := strings.Fields(line) // Split the line into parts
-				if len(parts) != 3 {
-					return 0, nil, errors.New("ERROR: invalid room format")
-				}
-				name := parts[0]
-				graph.Rooms[name] = &Room{Name: name} // Create a room and add it to the graph
+				continue
 
-				if phase == "##start" {
-					graph.Start = graph.Rooms[name]
-					graph.Start.IsStart = true
-					phase = "rooms0"
-				} else if phase == "##end" {
-					graph.End = graph.Rooms[name]
-					graph.End.IsEnd = true
-					phase = "rooms"
-				}
 			}
 
-		case "links": // Parse link
-
-			parts := strings.Split(line, "-")
-			if len(parts) != 2 {
-				return 0, nil, errors.New("ERROR: invalid link format")
+			parts := strings.Fields(line) // Split the line into parts
+			if len(parts) != 3 {
+				return 0, nil, errors.New("ERROR: invalid room format")
 			}
-			room1, room2 := parts[0], parts[1]
-			//add  conections
-			graph.Rooms[room1].Neighbors = append(graph.Rooms[room1].Neighbors, graph.Rooms[room2])
-			graph.Rooms[room2].Neighbors = append(graph.Rooms[room2].Neighbors, graph.Rooms[room1])
+
+			name := parts[0]
+			graph.Rooms[name] = &Room{Name: name} // Create a room and add it to the graph
+			if FirstFlag {
+				ExtraRooms++
+				continue
+			}
+			if flag {
+				StartingRooms++
+
+				graph.Start = graph.Rooms[name]
+			} else {
+				EndingRooms++
+				graph.End = graph.Rooms[name]
+
+			}
+		case "start-end":
+
+			if line == "##start" {
+
+				flag = true
+				phase = "rooms"
+			} else if line == "##end" {
+
+				flag = false
+				phase = "rooms"
+			}
+
 		}
 
 	}
@@ -102,6 +130,11 @@ func ParseInput(file string) (int, *Graph, error) {
 	if graph.Start == nil || graph.End == nil { // chack start and end
 		return 0, nil, errors.New("ERROR: missing start or end room")
 	}
+	fmt.Println("Number of Ants", ants)
+	fmt.Println("Start Rooms", StartingRooms)
+	fmt.Println("Ending Rooms", EndingRooms)
+	fmt.Println("Extra Rooms", ExtraRooms)
+	fmt.Println("Number of links", tunels)
 
 	return ants, graph, nil
 }
