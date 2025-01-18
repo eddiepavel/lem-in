@@ -100,41 +100,51 @@ func ParseInput(file string) (int, *Graph, error) {
 			name := parts[0]
 			x, err1 := strconv.Atoi(parts[1])
 			y, err2 := strconv.Atoi(parts[2])
-			
+
 			if err1 != nil || err2 != nil {
 				return 0, nil, errors.New("ERROR: invalid room format")
 			}
 
-			// Create a room and add it to the graph
-			graph.Rooms[name] = &Room{
+			// Create a new Room object
+			newRoom := &Room{
 				Name: name,
 				X:    x,
 				Y:    y,
 			}
 
-			if FirstFlag {
-				ExtraRooms++
-				continue
-			}
+			// Set flags if needed
 			if flag {
 				StartingRooms++
-
-				graph.Start = graph.Rooms[name]
-			} else {
+				newRoom.IsStart = true
+				graph.Start = newRoom
+				// Reset flag after using it
+				FirstFlag = true
+				flag = false
+			} else if !FirstFlag {
 				EndingRooms++
-				graph.End = graph.Rooms[name]
-
+				newRoom.IsEnd = true
+				graph.End = newRoom
+				FirstFlag = true
+			} else {
+				ExtraRooms++
 			}
+
+			// Now add the new room to the graph map
+			graph.Rooms[name] = newRoom
 		case "start-end":
 
 			if line == "##start" {
 
 				flag = true
+				FirstFlag = false
 				phase = "rooms"
+				continue
 			} else if line == "##end" {
 
 				flag = false
+				FirstFlag = false
 				phase = "rooms"
+				continue
 			}
 
 		}
