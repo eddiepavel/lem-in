@@ -101,6 +101,15 @@ func ParseInput(file string) (int, *Graph, error) {
 			x, err1 := strconv.Atoi(parts[1])
 			y, err2 := strconv.Atoi(parts[2])
 
+			if existingRoom, exists := graph.Rooms[name]; exists {
+				// If the room name already exists, check the coordinates
+				if existingRoom.X != x || existingRoom.Y != y {
+					return 0, nil, errors.New("ERROR: duplicate room name with different coordinates")
+				}
+				// If coordinates are the same, it's a harmless duplicate → skip or continue
+				continue
+			}
+
 			if err1 != nil || err2 != nil {
 				return 0, nil, errors.New("ERROR: invalid room format")
 			}
@@ -159,6 +168,8 @@ func ParseInput(file string) (int, *Graph, error) {
 	fmt.Println("Ending Rooms", EndingRooms)
 	fmt.Println("Extra Rooms", ExtraRooms)
 	fmt.Println("Number of links", tunels)
+	fmt.Println(graph.Start.Name)
+	fmt.Println(graph.End.Name)
 
 	return ants, graph, nil
 }

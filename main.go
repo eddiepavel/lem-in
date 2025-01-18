@@ -31,6 +31,11 @@ func main() {
 		fmt.Println(err)
 		return
 	}
+	fmt.Println("Running graph validation...")
+	if err := utilities.ValidateGraph(graph); err != nil {
+		fmt.Println("Validation failed:", err)
+		return // Stop execution if validation fails
+	}
 
 	fmt.Println(ants, graph)
 }
