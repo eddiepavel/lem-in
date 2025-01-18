@@ -46,7 +46,7 @@ func ParseInput(file string) (int, *Graph, error) {
 		return 0, nil, err
 	}
 	defer f.Close()
-
+	coordinatesMap := make(map[string]string)
 	scanner := bufio.NewScanner(f)
 	phase := "ants" // First phase is parsing the number of ants
 	for scanner.Scan() {
@@ -101,6 +101,10 @@ func ParseInput(file string) (int, *Graph, error) {
 			x, err1 := strconv.Atoi(parts[1])
 			y, err2 := strconv.Atoi(parts[2])
 
+			if err1 != nil || err2 != nil {
+				return 0, nil, errors.New("ERROR: invalid room format")
+			}
+
 			if existingRoom, exists := graph.Rooms[name]; exists {
 				// If the room name already exists, check the coordinates
 				if existingRoom.X != x || existingRoom.Y != y {
@@ -110,10 +114,13 @@ func ParseInput(file string) (int, *Graph, error) {
 				continue
 			}
 
-			if err1 != nil || err2 != nil {
-				return 0, nil, errors.New("ERROR: invalid room format")
+			// Check for different room names with the same coordinates
+			coordKey := fmt.Sprintf("%d,%d", x, y)
+			if existingRoom, exists := coordinatesMap[coordKey]; exists {
+				if existingRoom != name {
+					return 0, nil, fmt.Errorf("ERROR: rooms '%s' and '%s' share the same coordinates (%s)", existingRoom, name, coordKey)
+				}
 			}
-
 			// Create a new Room object
 			newRoom := &Room{
 				Name: name,
@@ -140,6 +147,7 @@ func ParseInput(file string) (int, *Graph, error) {
 
 			// Now add the new room to the graph map
 			graph.Rooms[name] = newRoom
+			coordinatesMap[coordKey] = name
 		case "start-end":
 
 			if line == "##start" {
