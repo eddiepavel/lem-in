@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -12,6 +13,7 @@ import (
 type Room struct {
 	Name      string
 	Neighbors []*Room
+	X, Y      int
 	IsStart   bool
 	IsEnd     bool
 }
@@ -49,7 +51,6 @@ func ParseInput(file string) (int, *Graph, error) {
 	phase := "ants" // First phase is parsing the number of ants
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text()) // Remove leading/trailing whitespace
-
 		//if strings.HasPrefix(line, "#") {          Ignore comments
 		if line == "##start" { // Rroom phases (##start or ##end)
 			FirstFlag = false // First time to start so we are done with extra rooms
@@ -97,7 +98,20 @@ func ParseInput(file string) (int, *Graph, error) {
 			}
 
 			name := parts[0]
-			graph.Rooms[name] = &Room{Name: name} // Create a room and add it to the graph
+			x, err1 := strconv.Atoi(parts[1])
+			y, err2 := strconv.Atoi(parts[2])
+			
+			if err1 != nil || err2 != nil {
+				return 0, nil, errors.New("ERROR: invalid room format")
+			}
+
+			// Create a room and add it to the graph
+			graph.Rooms[name] = &Room{
+				Name: name,
+				X:    x,
+				Y:    y,
+			}
+
 			if FirstFlag {
 				ExtraRooms++
 				continue
