@@ -36,6 +36,9 @@ func main() {
 		fmt.Println("Validation failed:", err)
 		return // Stop execution if validation fails
 	}
-
-	fmt.Println(ants, graph)
+	paths := utilities.FindPaths(*graph)
+	for _, path := range paths {
+		fmt.Println(path)
+	}
+	fmt.Printf("%d %+v\n", ants, graph)
 }
