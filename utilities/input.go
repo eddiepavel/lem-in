@@ -52,18 +52,19 @@ func ParseInput(file string) (int, *Graph, error) {
 	for scanner.Scan() {
 
 		line := strings.TrimSpace(scanner.Text()) // Remove leading/trailing whitespace
-		//if strings.HasPrefix(line, "#") {          Ignore comments
-		if line == "##start" { // Rroom phases (##start or ##end)
-			FirstFlag = false // First time to start so we are done with extra rooms
+		if strings.HasPrefix(line, "#") {
+			if line == "##start" { // Rroom phases (##start or ##end)
+				FirstFlag = false // First time to start so we are done with extra rooms
 
-			phase = "start-end"
+				phase = "start-end"
 
-		} else if line == "##end" {
+			} else if line == "##end" {
 
-			phase = "start-end"
+				phase = "start-end"
+			} else {
+				continue
+			}
 		}
-
-		//}
 
 		switch phase {
 		case "ants":

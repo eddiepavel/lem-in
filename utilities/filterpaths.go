@@ -1,6 +1,13 @@
 package utilities
 
+import (
+	"sort"
+)
+
 func FilterPaths(paths [][]string, graph *Graph) [][]string {
+	// Sort the paths by length
+	sortPaths(paths)
+
 	// A slice to store the filtered paths
 	newPaths := make([][]string, 0)
 
@@ -9,8 +16,8 @@ func FilterPaths(paths [][]string, graph *Graph) [][]string {
 
 	// Iterate over each path
 	for _, path := range paths {
-		// A flag to indicate if the path should be added
 		appendPath := true
+		currentPathRooms := make([]string, 0)
 
 		// Check each room in the path
 		for _, room := range path {
@@ -24,16 +31,25 @@ func FilterPaths(paths [][]string, graph *Graph) [][]string {
 				appendPath = false
 				break
 			}
-
-			// Mark the room as visited
-			visitedRooms[room] = true
+			currentPathRooms = append(currentPathRooms, room)
 		}
 
 		// Add the path to the result if it is valid
 		if appendPath {
+			// Mark rooms as visited only if path is valid
+			for _, room := range currentPathRooms {
+				visitedRooms[room] = true
+			}
 			newPaths = append(newPaths, path)
 		}
 	}
 
 	return newPaths
+}
+
+func sortPaths(paths [][]string) {
+	// Sort the paths by length
+	sort.Slice(paths, func(i, j int) bool {
+		return len(paths[i]) < len(paths[j])
+	})
 }

@@ -40,6 +40,7 @@ func main() {
 	//all valid paths available but with ovelapping
 	paths := utilities.FindPaths(*graph)
 
+	fmt.Println("Filtering paths...")
 	//filter overlapping paths
 	filterPaths := utilities.FilterPaths(paths, graph)
 
