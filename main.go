@@ -36,9 +36,16 @@ func main() {
 		fmt.Println("Validation failed:", err)
 		return // Stop execution if validation fails
 	}
+
+	//all valid paths available but with ovelapping
 	paths := utilities.FindPaths(*graph)
-	for _, path := range paths {
+
+	//filter overlapping paths
+	filterPaths := utilities.FilterPaths(paths, graph)
+
+	for _, path := range filterPaths {
 		fmt.Println(path)
 	}
+
 	fmt.Printf("%d %+v\n", ants, graph)
 }
