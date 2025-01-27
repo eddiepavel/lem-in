@@ -50,12 +50,14 @@ func ParseInput(file string) (int, *Graph, error) {
 	scanner := bufio.NewScanner(f)
 	phase := "ants" // First phase is parsing the number of ants
 	for scanner.Scan() {
+
 		line := strings.TrimSpace(scanner.Text()) // Remove leading/trailing whitespace
 		//if strings.HasPrefix(line, "#") {          Ignore comments
 		if line == "##start" { // Rroom phases (##start or ##end)
 			FirstFlag = false // First time to start so we are done with extra rooms
 
 			phase = "start-end"
+
 		} else if line == "##end" {
 
 			phase = "start-end"
@@ -86,6 +88,12 @@ func ParseInput(file string) (int, *Graph, error) {
 				}
 				room1, room2 := parts[0], parts[1]
 				//add come and go conections
+				if graph.Rooms[room1] == nil {
+					continue
+				}
+				if graph.Rooms[room2] == nil {
+					continue
+				}
 				graph.Rooms[room1].Neighbors = append(graph.Rooms[room1].Neighbors, graph.Rooms[room2])
 				graph.Rooms[room2].Neighbors = append(graph.Rooms[room2].Neighbors, graph.Rooms[room1])
 				continue
