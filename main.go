@@ -48,5 +48,6 @@ func main() {
 		fmt.Println(path)
 	}
 
-	fmt.Printf("%d %+v\n", ants, graph)
+	utilities.MoveAnts(filterPaths, ants, graph)
+
 }
