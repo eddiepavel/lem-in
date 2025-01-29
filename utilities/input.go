@@ -119,8 +119,14 @@ func ParseInput(file string) (int, *Graph, error) {
 				if existingRoom.X != x || existingRoom.Y != y {
 					return 0, nil, errors.New("ERROR: duplicate room name with different coordinates")
 				}
-				// If coordinates are the same, it's a harmless duplicate → skip or continue
-				continue
+				if !(flag || !FirstFlag) {
+
+					// If coordinates are the same, it's a harmless duplicate → skip or continue
+					continue
+				} else {
+					ExtraRooms--
+				}
+
 			}
 
 			// Check for different room names with the same coordinates
