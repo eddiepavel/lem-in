@@ -1,12 +1,14 @@
 package utilities
+
 import "fmt"
+
 func MoveAnts(paths [][]string, antsCount int, graph *Graph) {
 	// Initialize ants with their paths
 	ants := make([]Ant, antsCount)
 	for i := 0; i < antsCount; i++ {
 		ants[i] = Ant{
 			ID:   i + 1,
-			Path: paths[i%len(paths)], 
+			Path: paths[i%len(paths)],
 		}
 	}
 
@@ -15,7 +17,7 @@ func MoveAnts(paths [][]string, antsCount int, graph *Graph) {
 	roomOccupancy := make(map[string]int) // Track room occupancy, excluding the end room
 	countOperations := 0
 
-	for turn := 0; finished < antsCount; turn++ {
+	for turn := 1; finished < antsCount; turn++ {
 		output := ""
 		pathsUsed := make(map[int]bool) // Tracks paths that have used their start room allowance this turn
 
