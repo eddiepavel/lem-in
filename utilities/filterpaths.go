@@ -4,10 +4,35 @@ import (
 	"sort"
 )
 
-func FilterPaths(paths [][]string, graph *Graph) [][]string {
+var beenCalled bool
+
+func FilterPaths(paths [][]string, graph *Graph, antcount int) [][]string {
+	paths1 := FilterHelper(paths, graph)
+	paths2 := FilterHelper(paths, graph)
+	result := paths1
+	if len(paths1) != len(paths2) && len(paths2) > 0 {
+		result = CompareAntThroughput(paths1, paths2, antcount, graph)
+	}
+	return result
+}
+
+func FilterHelper(paths [][]string, graph *Graph) [][]string {
 	// Sort the paths by length
 	sortPaths(paths)
 
+	if beenCalled {
+		// Remove paths that have length equal to the shortest one
+		shortestLength := len(paths[0])
+		filteredPaths := make([][]string, 0)
+		for _, path := range paths {
+			if len(path) > shortestLength {
+				filteredPaths = append(filteredPaths, path)
+			}
+		}
+		paths = filteredPaths
+	} else {
+		beenCalled = true
+	}
 	// A slice to store the filtered paths
 	newPaths := make([][]string, 0)
 
@@ -52,4 +77,15 @@ func sortPaths(paths [][]string) {
 	sort.Slice(paths, func(i, j int) bool {
 		return len(paths[i]) < len(paths[j])
 	})
+}
+
+// Compare ant throughput for different sets of filtered paths
+func CompareAntThroughput(paths1, paths2 [][]string, antsCount int, graph *Graph) [][]string {
+	_, steps1 := MoveAnts(paths1, antsCount, graph)
+	_, steps2 := MoveAnts(paths2, antsCount, graph)
+
+	if steps1 < steps2 {
+		return paths1
+	}
+	return paths2
 }

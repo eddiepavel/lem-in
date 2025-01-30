@@ -1,11 +1,23 @@
 package utilities
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
-func MoveAnts(paths [][]string, antsCount int, graph *Graph) {
+func MoveAnts(paths [][]string, antsCount int, graph *Graph) (string, int) {
 	// Initialize ants with their paths
 	ants := make([]Ant, antsCount)
 	for i := 0; i < antsCount; i++ {
+		if len(paths) != 1 {
+			if i == antsCount-1 {
+				ants[i] = Ant{
+					ID:   i + 1,
+					Path: paths[0],
+				}
+				continue
+			}
+		}
 		ants[i] = Ant{
 			ID:   i + 1,
 			Path: paths[i%len(paths)],
@@ -15,7 +27,9 @@ func MoveAnts(paths [][]string, antsCount int, graph *Graph) {
 	progress := make([]int, antsCount)    // Track current step in each ant's path
 	finished := 0                         // Count of ants that have finished
 	roomOccupancy := make(map[string]int) // Track room occupancy, excluding the end room
-	countOperations := 0
+
+	var outputBuilder strings.Builder
+	steps := 0 // Step counter
 
 	for turn := 1; finished < antsCount; turn++ {
 		output := ""
@@ -32,6 +46,9 @@ func MoveAnts(paths [][]string, antsCount int, graph *Graph) {
 			// Check if the ant is in the start room and handle path allowance
 			if currentRoom == graph.Start.Name {
 				pathIndex := i % len(paths)
+				if i == antsCount-1 && len(paths) != 1 {
+					pathIndex = 0
+				}
 				if pathsUsed[pathIndex] {
 					continue // This path has already sent an ant this turn
 				}
@@ -64,11 +81,18 @@ func MoveAnts(paths [][]string, antsCount int, graph *Graph) {
 			}
 		}
 
-		// Print the turn's movements if any
+		// Collect the turn's movements if any
 		if output != "" {
-			fmt.Println(output[:len(output)-1]) // Trim trailing space
+			outputBuilder.WriteString(output[:len(output)-1]) // Trim trailing space
+			outputBuilder.WriteString("\n")
+			steps++ // Increment step counter
 		}
-		countOperations = turn
 	}
-	fmt.Println(countOperations)
+	// Trim the final newline if it exists
+	finalOutput := outputBuilder.String()
+	if len(finalOutput) > 0 && finalOutput[len(finalOutput)-1] == '\n' {
+		finalOutput = finalOutput[:len(finalOutput)-1]
+	}
+
+	return finalOutput, steps
 }

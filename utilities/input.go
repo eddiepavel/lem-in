@@ -186,13 +186,21 @@ func ParseInput(file string) (int, *Graph, error) {
 	if graph.Start == nil || graph.End == nil { // chack start and end
 		return 0, nil, errors.New("ERROR: missing start or end room")
 	}
-	fmt.Println("Number of Ants", ants)
-	fmt.Println("Start Rooms", StartingRooms)
-	fmt.Println("Ending Rooms", EndingRooms)
-	fmt.Println("Extra Rooms", ExtraRooms)
-	fmt.Println("Number of links", tunels)
-	fmt.Println(graph.Start.Name)
-	fmt.Println(graph.End.Name)
+	if err := scanner.Err(); err != nil {
+		return 0, nil, err
+	}
+
+	// Output the content of the file line by line
 
 	return ants, graph, nil
+}
+
+func Print(file string) {
+	f, _ := os.Open(file)
+	f.Seek(0, 0) // Reset the file pointer to the beginning
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		fmt.Println(scanner.Text())
+	}
+	fmt.Println()
 }

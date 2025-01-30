@@ -8,7 +8,7 @@ import (
 func TestReadInput(t *testing.T) {
 	// Test case 1
 	os.Args = []string{"main.go"}
-	expected := " "
+	expected := ""
 	actual, _ := ReadInput()
 	if actual != expected {
 		t.Errorf("Test case 1 failed: expected %s but got %s", expected, actual)
@@ -31,7 +31,7 @@ func TestParseInput(t *testing.T) {
 	}
 
 	// Test case 2
-	_, _, err = ParseInput("../test.txt")
+	_, _, err = ParseInput("../examples/example00.txt")
 	if err != nil {
 		t.Errorf("Test case 2 failed: expected nil but got %v", err)
 	}
@@ -60,10 +60,10 @@ func TestValidateGraph(t *testing.T) {
 		Start: &Room{},
 		End:   &Room{},
 		Rooms: map[string]*Room{
-			"start": &Room{
+			"start": {
 				Name: "start",
 			},
-			"end": &Room{
+			"end": {
 				Name: "end",
 			},
 		},
@@ -198,10 +198,15 @@ func TestFilterPaths(t *testing.T) {
 
 	// Test case 1
 	paths := FindPaths(*graph)
-	filteredPaths := FilterPaths(paths, graph)
+	filteredPaths := FilterPaths(paths, graph, 1)
 	if len(filteredPaths) != 1 {
 		t.Errorf("Test case 1 failed: expected 1 paths but got %d", len(filteredPaths))
 	}
+}
+
+type expected struct {
+	output string
+	count  int
 }
 
 func TestMoveAnts(t *testing.T) {
@@ -231,9 +236,18 @@ func TestMoveAnts(t *testing.T) {
 		Start: startRoom,
 		End:   endRoom,
 	}
-
+	test := &expected{
+		output: "L1-A L2-B\nL1-C L3-A\nL1-end L2-C L4-B\nL2-end L3-C L5-A\nL3-end L4-C\nL4-end L5-C\nL5-end",
+		count:  7,
+	}
 	// Test case 1
 	paths := FindPaths(*graph)
 	antsCount := 5
-	MoveAnts(paths, antsCount, graph)
+	out, count := MoveAnts(paths, antsCount, graph)
+	if out != test.output {
+		t.Errorf("Test case 1 failed: expected %s but got %s", test.output, out)
+	}
+	if count != test.count {
+		t.Errorf("Test case 1 failed: expected %d but got %d", test.count, count)
+	}
 }
