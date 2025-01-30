@@ -10,7 +10,7 @@ func MoveAnts(paths [][]string, antsCount int, graph *Graph) (string, int) {
 	ants := make([]Ant, antsCount)
 	for i := 0; i < antsCount; i++ {
 		if len(paths) != 1 {
-			if i == antsCount-1 {
+			if i == antsCount-1 && len(paths[0]) != len(paths[i%len(paths)]) {
 				ants[i] = Ant{
 					ID:   i + 1,
 					Path: paths[0],
@@ -46,7 +46,7 @@ func MoveAnts(paths [][]string, antsCount int, graph *Graph) (string, int) {
 			// Check if the ant is in the start room and handle path allowance
 			if currentRoom == graph.Start.Name {
 				pathIndex := i % len(paths)
-				if i == antsCount-1 && len(paths) != 1 {
+				if i == antsCount-1 && len(paths) != 1 && len(paths[0]) != len(paths[pathIndex]) {
 					pathIndex = 0
 				}
 				if pathsUsed[pathIndex] {
