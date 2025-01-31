@@ -52,6 +52,9 @@ func ParseInput(file string) (int, *Graph, error) {
 	for scanner.Scan() {
 
 		line := strings.TrimSpace(scanner.Text()) // Remove leading/trailing whitespace
+		if strings.HasPrefix(line, "L") || strings.HasPrefix(line, "l") {
+			return 0, nil, errors.New("error: Room name cannot start from L or l")
+		}
 		if strings.HasPrefix(line, "#") {
 			if line == "##start" { // Rroom phases (##start or ##end)
 				FirstFlag = false // First time to start so we are done with extra rooms
