@@ -7,11 +7,11 @@ import (
 var beenCalled bool
 
 func FilterPaths(paths [][]string, graph *Graph, antcount int) [][]string {
-	paths1 := FilterHelper(paths, graph)
-	paths2 := FilterHelper(paths, graph)
+	paths1 := FilterHelper(paths, graph) // keep non-overlapping paths starting from the shortest
+	paths2 := FilterHelper(paths, graph) // keep non-overlapping paths skipping the shortest to brute force different combos
 	result := paths1
 	if len(paths1) != len(paths2) && len(paths2) > 0 {
-		result = CompareAntThroughput(paths1, paths2, antcount, graph)
+		result = CompareAntThroughput(paths1, paths2, antcount, graph) // compare ant throughput for different sets of filtered paths
 	}
 	return result
 }
