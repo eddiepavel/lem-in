@@ -10,17 +10,7 @@ func ValidateGraph(graph *Graph) error {
 		return errors.New("graph is missing a start room")
 	}
 	if graph.End == nil {
-		return errors.New("graph is missing a start room")
-	}
-
-	// Check if all neighbors are valid
-	for _, room := range graph.Rooms {
-		for _, neighbor := range room.Neighbors {
-			// Check if the neighbor exists in the graph
-			if _, exists := graph.Rooms[neighbor.Name]; !exists {
-				return fmt.Errorf("invalid neighbor: room '%s' references a non-existent room '%s'", room.Name, neighbor.Name)
-			}
-		}
+		return errors.New("graph is missing a end room")
 	}
 
 	queue := []*Room{graph.Start}    // Start from the Start room

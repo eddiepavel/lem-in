@@ -39,7 +39,7 @@ func ParseInput(file string) (int, *Graph, error) {
 	var EndingRooms int
 	var ExtraRooms int
 	var tunels int
-	FirstFlag := true // Flag so we know the extra rooms befor ##StartRooms
+	StartFlag := true // Flag so we know the extra rooms befor ##StartRooms
 
 	f, err := os.Open(file)
 	if err != nil {
@@ -50,14 +50,16 @@ func ParseInput(file string) (int, *Graph, error) {
 	scanner := bufio.NewScanner(f)
 	phase := "ants" // First phase is parsing the number of ants
 	for scanner.Scan() {
-
+		if scanner.Text() == "" {
+			continue
+		}
 		line := strings.TrimSpace(scanner.Text()) // Remove leading/trailing whitespace
 		if strings.HasPrefix(line, "L") || strings.HasPrefix(line, "l") {
 			return 0, nil, errors.New("error: Room name cannot start from L or l")
 		}
 		if strings.HasPrefix(line, "#") {
 			if line == "##start" { // Rroom phases (##start or ##end)
-				FirstFlag = false // First time to start so we are done with extra rooms
+				StartFlag = false // First time to start so we are done with extra rooms
 
 				phase = "start-end"
 
@@ -122,7 +124,7 @@ func ParseInput(file string) (int, *Graph, error) {
 				if existingRoom.X != x || existingRoom.Y != y {
 					return 0, nil, errors.New("ERROR: duplicate room name with different coordinates")
 				}
-				if !(flag || !FirstFlag) {
+				if !(flag || !StartFlag) {
 
 					// If coordinates are the same, it's a harmless duplicate → skip or continue
 					continue
@@ -152,13 +154,13 @@ func ParseInput(file string) (int, *Graph, error) {
 				newRoom.IsStart = true
 				graph.Start = newRoom
 				// Reset flag after using it
-				FirstFlag = true
+				StartFlag = true
 				flag = false
-			} else if !FirstFlag {
+			} else if !StartFlag {
 				EndingRooms++
 				newRoom.IsEnd = true
 				graph.End = newRoom
-				FirstFlag = true
+				StartFlag = true
 			} else {
 				ExtraRooms++
 			}
@@ -171,13 +173,13 @@ func ParseInput(file string) (int, *Graph, error) {
 			if line == "##start" {
 
 				flag = true
-				FirstFlag = false
+				StartFlag = false
 				phase = "rooms"
 				continue
 			} else if line == "##end" {
 
 				flag = false
-				FirstFlag = false
+				StartFlag = false
 				phase = "rooms"
 				continue
 			}
