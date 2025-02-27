@@ -5,6 +5,16 @@ import (
 )
 
 func ValidateGraph(graph *Graph) error {
+	if graph == nil {
+		return fmt.Errorf("graph is nil")
+	}
+	if graph.Start == nil {
+		return fmt.Errorf("graph start room is nil")
+	}
+	if graph.End == nil {
+		return fmt.Errorf("graph end room is nil")
+	}
+
 	queue := []*Room{graph.Start}        // Start from the Start room
 	visited := make(map[string]struct{}) // Track visited rooms
 

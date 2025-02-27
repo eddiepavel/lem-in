@@ -25,13 +25,14 @@ func TestReadInput(t *testing.T) {
 
 func TestParseInput(t *testing.T) {
 	// Test case 1
-	_, _, err := ParseInput("nonexistentfile.txt")
+	_, _, err := ParseInput()
 	if err == nil {
 		t.Errorf("Test case 1 failed: expected an error but got nil")
 	}
 
 	// Test case 2
-	_, _, err = ParseInput("../examples/example00.txt")
+	os.Args = []string{"main.go", "../examples/example00.txt"}
+	_, _, err = ParseInput()
 	if err != nil {
 		t.Errorf("Test case 2 failed: expected nil but got %v", err)
 	}
@@ -198,7 +199,8 @@ func TestFilterPaths(t *testing.T) {
 
 	// Test case 1
 	paths := FindPaths(*graph)
-	filteredPaths := FilterPaths(paths, graph, 1)
+	limit := 1
+	filteredPaths := FilterPaths(paths, graph, &limit)
 	if len(filteredPaths) != 1 {
 		t.Errorf("Test case 1 failed: expected 1 paths but got %d", len(filteredPaths))
 	}
