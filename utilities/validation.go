@@ -1,20 +1,12 @@
 package utilities
 
 import (
-	"errors"
 	"fmt"
 )
 
 func ValidateGraph(graph *Graph) error {
-	if graph.Start == nil {
-		return errors.New("graph is missing a start room")
-	}
-	if graph.End == nil {
-		return errors.New("graph is missing a end room")
-	}
-
-	queue := []*Room{graph.Start}    // Start from the Start room
-	visited := make(map[string]bool) // Track visited rooms
+	queue := []*Room{graph.Start}        // Start from the Start room
+	visited := make(map[string]struct{}) // Track visited rooms
 
 	// BFS Loop
 	for len(queue) > 0 {
@@ -22,7 +14,7 @@ func ValidateGraph(graph *Graph) error {
 		queue = queue[1:]   // Remove it from the queue
 
 		// Mark the current room as visited
-		visited[current.Name] = true
+		visited[current.Name] = struct{}{}
 
 		// Check if we reached the End room
 		if current == graph.End {
@@ -31,14 +23,13 @@ func ValidateGraph(graph *Graph) error {
 
 		// Enqueue all unvisited neighbors
 		for _, neighbor := range current.Neighbors {
-			if !visited[neighbor.Name] {
+			if _, seen := visited[neighbor.Name]; !seen {
 				queue = append(queue, neighbor)
-				visited[neighbor.Name] = true // Mark as visited when enqueued
+				visited[neighbor.Name] = struct{}{} // Mark as visited when enqueued
 			}
 		}
 	}
 
 	// If BFS completes without finding the End room
 	return fmt.Errorf("no valid path from start to end")
-
 }

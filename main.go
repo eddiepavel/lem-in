@@ -6,16 +6,10 @@ import (
 )
 
 func main() {
-	file, err := utilities.ReadInput()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
 	// validate input
-	ants, graph, err := utilities.ParseInput(file)
-
+	ants, graph, err := utilities.ParseInput()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Parsing failed: ", err)
 		return
 	}
 	// validate graph
@@ -24,11 +18,11 @@ func main() {
 		return // Stop execution if validation fails
 	}
 	// print input
-	utilities.Print(file)
+	utilities.Print()
 	// all valid paths available but with ovelapping
 	paths := utilities.FindPaths(*graph)
 	// filter overlapping paths
-	filterPaths := utilities.FilterPaths(paths, graph, ants)
+	filterPaths := utilities.FilterPaths(paths, graph, &ants)
 	// move ants
 	output, _ := utilities.MoveAnts(filterPaths, ants, graph)
 	fmt.Println(output)

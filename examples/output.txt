@@ -1,0 +1,82 @@
+10000
+##start
+Room0 12 95
+##end
+Room24 88 30
+Room1 96 90
+Room2 55 39
+Room3 35 60
+Room4 45 72
+Room5 76 50
+Room6 93 75
+Room7 44 68
+Room8 49 18
+Room9 85 57
+Room10 13 66
+Room11 9 10
+Room12 8 79
+Room13 38 18
+Room14 20 43
+Room15 72 4
+Room16 58 81
+Room17 4 13
+Room18 32 24
+Room19 94 99
+Room20 74 1
+Room21 9 44
+Room22 90 96
+Room23 51 92
+Room0-Room1
+Room0-Room2
+Room0-Room3
+Room0-Room4
+Room0-Room5
+Room1-Room3
+Room1-Room4
+Room1-Room6
+Room1-Room8
+Room2-Room6
+Room2-Room7
+Room2-Room9
+Room2-Room10
+Room3-Room5
+Room3-Room6
+Room3-Room7
+Room4-Room5
+Room4-Room7
+Room4-Room8
+Room5-Room6
+Room5-Room9
+Room6-Room7
+Room7-Room9
+Room8-Room10
+Room8-Room12
+Room8-Room20
+Room9-Room11
+Room9-Room14
+Room10-Room11
+Room10-Room14
+Room10-Room15
+Room11-Room14
+Room11-Room15
+Room11-Room16
+Room12-Room13
+Room12-Room14
+Room12-Room15
+Room12-Room16
+Room13-Room15
+Room13-Room16
+Room13-Room17
+Room13-Room18
+Room14-Room16
+Room15-Room18
+Room16-Room18
+Room17-Room18
+Room17-Room24
+Room18-Room20
+Room19-Room23
+Room20-Room21
+Room20-Room24
+Room21-Room24
+Room22-Room23
+Room22-Room24

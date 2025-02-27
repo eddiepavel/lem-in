@@ -1,0 +1,13 @@
+5
+##start
+Room0 77 5
+##end
+Room4 92 63
+Room1 31 86
+Room2 16 52
+Room3 83 46
+Room0-Room2
+Room0-Room3
+Room1-Room3
+Room2-Room4
+Room3-Room4

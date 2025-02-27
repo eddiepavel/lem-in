@@ -6,93 +6,82 @@ import (
 )
 
 func MoveAnts(paths [][]string, antsCount int, graph *Graph) (string, int) {
-	// Initialize ants with their paths
-	ants := make([]Ant, antsCount)
-	for i := 0; i < antsCount; i++ {
-		if len(paths) != 1 {
-			if i == antsCount-1 && len(paths[0]) != len(paths[i%len(paths)]) {
-				ants[i] = Ant{
-					ID:   i + 1,
-					Path: paths[0],
-				}
-				continue
-			}
-		}
-		ants[i] = Ant{
-			ID:   i + 1,
-			Path: paths[i%len(paths)],
-		}
-	}
-
-	progress := make([]int, antsCount)    // Track current step in each ant's path
-	finished := 0                         // Count of ants that have finished
-	roomOccupancy := make(map[string]int) // Track room occupancy, excluding the end room
-
+	ants := initializeAnts(paths, antsCount)
+	progress := make([]byte, antsCount)
+	finished := 0
+	roomOccupancy := make(map[string]bool)
 	var outputBuilder strings.Builder
-	steps := 0 // Step counter
+	steps := 0
 
 	for turn := 1; finished < antsCount; turn++ {
 		output := ""
-		pathsUsed := make(map[int]bool) // Tracks paths that have used their start room allowance this turn
+		pathsUsed := make([]bool, len(paths))
 
 		for i := 0; i < antsCount; i++ {
-			if progress[i] >= len(ants[i].Path)-1 {
-				continue // Ant has already finished
+			if progress[i] >= byte(len(ants[i].Path)-1) {
+				continue
 			}
 
-			currentRoom := ants[i].Path[progress[i]]
-			nextRoom := ants[i].Path[progress[i]+1]
+			currentRoom, nextRoom := ants[i].Path[progress[i]], ants[i].Path[progress[i]+1]
 
-			// Check if the ant is in the start room and handle path allowance
-			if currentRoom == graph.Start.Name {
-				pathIndex := i % len(paths)
-				if i == antsCount-1 && len(paths) != 1 && len(paths[0]) != len(paths[pathIndex]) {
-					pathIndex = 0
-				}
-				if pathsUsed[pathIndex] {
-					continue // This path has already sent an ant this turn
-				}
-				pathsUsed[pathIndex] = true
+			if currentRoom == graph.Start.Name && !canUsePath(i, len(paths), pathsUsed, antsCount, paths) {
+				continue
 			}
 
-			// Check if the next room is available (end room is always allowed)
-			if roomOccupancy[nextRoom] == 0 || nextRoom == graph.End.Name {
-				// Free the current room if it's not the end room
-				if currentRoom != "" && currentRoom != graph.End.Name {
-					roomOccupancy[currentRoom] = 0
-				}
-
-				// Occupy the next room if it's not the end room
-				if nextRoom != graph.End.Name {
-					// Check if next room is actually free now
-					if roomOccupancy[nextRoom] != 0 {
-						continue // Skip if another ant has already taken this room in the same turn
-					}
-					roomOccupancy[nextRoom] = ants[i].ID
-				}
-
+			if isRoomAvailable(nextRoom, roomOccupancy, graph) {
+				updateRoomOccupancy(currentRoom, nextRoom, roomOccupancy, graph, ants[i].ID)
 				progress[i]++
 				output += fmt.Sprintf("L%d-%s ", ants[i].ID, nextRoom)
 
-				// Check if the ant has finished
-				if progress[i] == len(ants[i].Path)-1 {
+				if progress[i] == byte(len(ants[i].Path)-1) {
 					finished++
 				}
 			}
 		}
 
-		// Collect the turn's movements if any
 		if output != "" {
-			outputBuilder.WriteString(output[:len(output)-1]) // Trim trailing space
+			outputBuilder.WriteString(strings.TrimSpace(output))
 			outputBuilder.WriteString("\n")
-			steps++ // Increment step counter
+			steps++
 		}
 	}
-	// Trim the final newline if it exists
-	finalOutput := outputBuilder.String()
-	if len(finalOutput) > 0 && finalOutput[len(finalOutput)-1] == '\n' {
-		finalOutput = finalOutput[:len(finalOutput)-1]
-	}
 
-	return finalOutput, steps
+	return strings.TrimSuffix(outputBuilder.String(), "\n"), steps
+}
+
+func initializeAnts(paths [][]string, antsCount int) []Ant {
+	ants := make([]Ant, antsCount)
+	for i := 0; i < antsCount; i++ {
+		pathIndex := i % len(paths)
+		if len(paths) != 1 && i == antsCount-1 && len(paths[0]) != len(paths[pathIndex]) {
+			pathIndex = 0
+		}
+		ants[i] = Ant{ID: i + 1, Path: paths[pathIndex]}
+	}
+	return ants
+}
+
+func canUsePath(i, pathsLen int, pathsUsed []bool, antsCount int, paths [][]string) bool {
+	pathIndex := i % pathsLen
+	if i == antsCount-1 && pathsLen != 1 && len(paths[0]) != len(paths[pathIndex]) {
+		pathIndex = 0
+	}
+	if pathsUsed[pathIndex] {
+		return false
+	}
+	pathsUsed[pathIndex] = true
+	return true
+}
+
+func isRoomAvailable(nextRoom string, roomOccupancy map[string]bool, graph *Graph) bool {
+	return !roomOccupancy[nextRoom] || nextRoom == graph.End.Name
+}
+
+func updateRoomOccupancy(currentRoom, nextRoom string, roomOccupancy map[string]bool, graph *Graph, antID int) {
+	if currentRoom != "" && currentRoom != graph.End.Name {
+		roomOccupancy[currentRoom] = false
+	}
+	if nextRoom != graph.End.Name {
+		roomOccupancy[nextRoom] = true
+	}
 }

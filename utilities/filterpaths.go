@@ -4,86 +4,84 @@ import (
 	"sort"
 )
 
-var beenCalled bool
-
-func FilterPaths(paths [][]string, graph *Graph, antcount int) [][]string {
-	paths1 := FilterHelper(paths, graph) // keep non-overlapping paths starting from the shortest
-	paths2 := FilterHelper(paths, graph) // keep non-overlapping paths skipping the shortest to brute force different combos
-	result := paths1
-	if len(paths1) != len(paths2) && len(paths2) > 0 {
-		result = CompareAntThroughput(paths1, paths2, antcount, graph) // compare ant throughput for different sets of filtered paths
+func FilterPaths(paths [][]string, graph *Graph, antCount *int) [][]string {
+	if len(paths) == 1 {
+		return paths
 	}
-	return result
-}
-
-func FilterHelper(paths [][]string, graph *Graph) [][]string {
 	// Sort the paths by length
 	sortPaths(paths)
 
-	if beenCalled {
-		// Remove paths that have length equal to the shortest one
-		shortestLength := len(paths[0])
-		filteredPaths := make([][]string, 0)
-		for _, path := range paths {
-			if len(path) > shortestLength {
-				filteredPaths = append(filteredPaths, path)
-			}
-		}
-		paths = filteredPaths
-	} else {
-		beenCalled = true
+	// Filter paths to keep non-overlapping paths
+	result := filterNonOverlappingPaths(paths, graph, nil, nil)
+	result = filterNonOverlappingPaths(paths, graph, &result, antCount)
+
+	return result
+}
+
+func filterNonOverlappingPaths(paths [][]string, graph *Graph, result *[][]string, ants *int) [][]string {
+	if result != nil {
+		paths = removeShortestPaths(paths)
 	}
-	// A slice to store the filtered paths
+
 	newPaths := make([][]string, 0)
+	visitedRooms := make(map[string]struct{})
 
-	// A map to track visited rooms
-	visitedRooms := make(map[string]bool)
-
-	// Iterate over each path
 	for _, path := range paths {
-		appendPath := true
-		currentPathRooms := make([]string, 0)
-
-		// Check each room in the path
-		for _, room := range path {
-			// Skip start and end rooms
-			if room == graph.Start.Name || room == graph.End.Name {
-				continue
-			}
-
-			// If the room is already visited, mark as invalid
-			if visitedRooms[room] {
-				appendPath = false
-				break
-			}
-			currentPathRooms = append(currentPathRooms, room)
-		}
-
-		// Add the path to the result if it is valid
-		if appendPath {
-			// Mark rooms as visited only if path is valid
-			for _, room := range currentPathRooms {
-				visitedRooms[room] = true
-			}
+		if isValidPath(path, graph, visitedRooms) {
+			markRoomsAsVisited(path, graph, visitedRooms)
 			newPaths = append(newPaths, path)
 		}
+	}
+	if result != nil && len(newPaths) > 0 {
+		return compareAntThroughput(newPaths, *result, *ants, graph)
 	}
 
 	return newPaths
 }
 
+func removeShortestPaths(paths [][]string) [][]string {
+	shortestLength := len(paths[0])
+	filteredPaths := make([][]string, 0)
+	for _, path := range paths {
+		if len(path) > shortestLength {
+			filteredPaths = append(filteredPaths, path)
+		}
+	}
+	if len(filteredPaths) == 0 {
+		return paths
+	}
+	return filteredPaths
+}
+
+func isValidPath(path []string, graph *Graph, visitedRooms map[string]struct{}) bool {
+	for _, room := range path {
+		if room == graph.Start.Name || room == graph.End.Name {
+			continue
+		}
+		if _, visited := visitedRooms[room]; visited {
+			return false
+		}
+	}
+	return true
+}
+
+func markRoomsAsVisited(path []string, graph *Graph, visitedRooms map[string]struct{}) {
+	for _, room := range path {
+		if room != graph.Start.Name && room != graph.End.Name {
+			visitedRooms[room] = struct{}{}
+		}
+	}
+}
+
 func sortPaths(paths [][]string) {
-	// Sort the paths by length
 	sort.Slice(paths, func(i, j int) bool {
 		return len(paths[i]) < len(paths[j])
 	})
 }
 
-// Compare ant throughput for different sets of filtered paths
-func CompareAntThroughput(paths1, paths2 [][]string, antsCount int, graph *Graph) [][]string {
+func compareAntThroughput(paths1, paths2 [][]string, antsCount int, graph *Graph) [][]string {
 	_, steps1 := MoveAnts(paths1, antsCount, graph)
 	_, steps2 := MoveAnts(paths2, antsCount, graph)
-
 	if steps1 < steps2 {
 		return paths1
 	}

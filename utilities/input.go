@@ -31,181 +31,166 @@ type Graph struct {
 	End   *Room
 }
 
-func ParseInput(file string) (int, *Graph, error) {
-	graph := &Graph{Rooms: make(map[string]*Room)} // Create a graph to store rooms and connections (farm)
+func ParseInput() (int, *Graph, error) {
+	file, err := ReadInput()
+	if err != nil {
+		return 0, nil, err
+	}
+
+	graph := &Graph{Rooms: make(map[string]*Room)}
 	var ants int
-	var flag bool
-	var StartingRooms int
-	var EndingRooms int
-	var ExtraRooms int
-	var tunels int
-	StartFlag := true // Flag so we know the extra rooms befor ##StartRooms
+	var startRoom, endRoom *Room
 
 	f, err := os.Open(file)
 	if err != nil {
 		return 0, nil, err
 	}
 	defer f.Close()
-	coordinatesMap := make(map[string]string)
+
 	scanner := bufio.NewScanner(f)
-	phase := "ants" // First phase is parsing the number of ants
+	phase := "ants"
 	for scanner.Scan() {
-		if scanner.Text() == "" {
-			continue
-		}
-		line := strings.TrimSpace(scanner.Text()) // Remove leading/trailing whitespace
-		if strings.HasPrefix(line, "L") || strings.HasPrefix(line, "l") {
-			return 0, nil, errors.New("error: Room name cannot start from L or l")
-		}
-		if strings.HasPrefix(line, "#") {
-			if line == "##start" { // Rroom phases (##start or ##end)
-				StartFlag = false // First time to start so we are done with extra rooms
-
-				phase = "start-end"
-
-			} else if line == "##end" {
-
-				phase = "start-end"
-			} else {
-				continue
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			if strings.HasPrefix(line, "##") {
+				if line == "##start" {
+					if startRoom != nil {
+						return 0, nil, errors.New("ERROR: multiple ##start markers")
+					}
+					phase = "start"
+				} else if line == "##end" {
+					if endRoom != nil {
+						return 0, nil, errors.New("ERROR: multiple ##end markers")
+					}
+					phase = "end"
+				} else {
+					return 0, nil, errors.New("ERROR: invalid double # marker")
+				}
 			}
+			continue
 		}
 
 		switch phase {
 		case "ants":
-
-			_, err := fmt.Sscanf(line, "%d", &ants) // Parse the number of ants
-			if err != nil || ants <= 0 {
-				return 0, nil, errors.New("error: invalid number of ants")
-
+			ants, err = parseAnts(line)
+			if err != nil {
+				return 0, nil, err
 			}
-
-			phase = "rooms" // Go to parsing rooms
-			continue
-
+			phase = "rooms"
 		case "rooms":
-
-			if strings.Contains(line, "-") { // If the line contains "-", it's a link --> switch to link parsing
-				tunels++
-
-				parts := strings.Split(line, "-")
-				if len(parts) != 2 {
-					return 0, nil, errors.New("ERROR: Invalid link format")
-				}
-				room1, room2 := parts[0], parts[1]
-				//add come and go conections
-				if graph.Rooms[room1] == nil {
-					continue
-				}
-				if graph.Rooms[room2] == nil {
-					continue
-				}
-				graph.Rooms[room1].Neighbors = append(graph.Rooms[room1].Neighbors, graph.Rooms[room2])
-				graph.Rooms[room2].Neighbors = append(graph.Rooms[room2].Neighbors, graph.Rooms[room1])
-				continue
-
-			}
-
-			parts := strings.Fields(line) // Split the line into parts
-			if len(parts) != 3 {
-				return 0, nil, errors.New("ERROR: invalid room format")
-			}
-
-			name := parts[0]
-			x, err1 := strconv.Atoi(parts[1])
-			y, err2 := strconv.Atoi(parts[2])
-
-			if err1 != nil || err2 != nil {
-				return 0, nil, errors.New("ERROR: invalid room format")
-			}
-
-			if existingRoom, exists := graph.Rooms[name]; exists {
-				// If the room name already exists, check the coordinates
-				if existingRoom.X != x || existingRoom.Y != y {
-					return 0, nil, errors.New("ERROR: duplicate room name with different coordinates")
-				}
-				if !(flag || !StartFlag) {
-
-					// If coordinates are the same, it's a harmless duplicate → skip or continue
-					continue
-				} else {
-					ExtraRooms--
-				}
-
-			}
-
-			// Check for different room names with the same coordinates
-			coordKey := fmt.Sprintf("%d,%d", x, y)
-			if existingRoom, exists := coordinatesMap[coordKey]; exists {
-				if existingRoom != name {
-					return 0, nil, fmt.Errorf("ERROR: rooms '%s' and '%s' share the same coordinates (%s)", existingRoom, name, coordKey)
-				}
-			}
-			// Create a new Room object
-			newRoom := &Room{
-				Name: name,
-				X:    x,
-				Y:    y,
-			}
-
-			// Set flags if needed
-			if flag {
-				StartingRooms++
-				newRoom.IsStart = true
-				graph.Start = newRoom
-				// Reset flag after using it
-				StartFlag = true
-				flag = false
-			} else if !StartFlag {
-				EndingRooms++
-				newRoom.IsEnd = true
-				graph.End = newRoom
-				StartFlag = true
+			if strings.Contains(line, "-") {
+				err = parseLink(line, graph)
 			} else {
-				ExtraRooms++
+				_, err = parseRoom(line, graph)
 			}
-
-			// Now add the new room to the graph map
-			graph.Rooms[name] = newRoom
-			coordinatesMap[coordKey] = name
-		case "start-end":
-
-			if line == "##start" {
-
-				flag = true
-				StartFlag = false
-				phase = "rooms"
-				continue
-			} else if line == "##end" {
-
-				flag = false
-				StartFlag = false
-				phase = "rooms"
-				continue
+			if err != nil {
+				return 0, nil, err
 			}
-
+		case "start":
+			startRoom, err = parseRoom(line, graph)
+			if err != nil {
+				return 0, nil, err
+			}
+			startRoom.IsStart = true
+			graph.Start = startRoom
+			phase = "rooms"
+		case "end":
+			endRoom, err = parseRoom(line, graph)
+			if err != nil {
+				return 0, nil, err
+			}
+			endRoom.IsEnd = true
+			graph.End = endRoom
+			phase = "rooms"
 		}
-
 	}
 
-	if graph.Start == nil || graph.End == nil { // chack start and end
+	if graph.Start == nil || graph.End == nil {
 		return 0, nil, errors.New("ERROR: missing start or end room")
 	}
+
 	if err := scanner.Err(); err != nil {
 		return 0, nil, err
 	}
 
-	// Output the content of the file line by line
-
 	return ants, graph, nil
 }
 
-func Print(file string) {
-	f, _ := os.Open(file)
+func parseAnts(line string) (int, error) {
+	ants, err := strconv.Atoi(line)
+	if err != nil || ants <= 0 {
+		return 0, errors.New("error: invalid number of ants")
+	}
+	return ants, nil
+}
+
+func parseRoom(line string, graph *Graph) (*Room, error) {
+	parts := strings.Fields(line)
+	if len(parts) != 3 {
+		return nil, errors.New("ERROR: invalid room format")
+	}
+
+	name := parts[0]
+	if strings.HasPrefix(name, "L") || strings.HasPrefix(name, "l") {
+		return nil, errors.New("error: Room name cannot start from L or l")
+	}
+
+	x, err1 := strconv.Atoi(parts[1])
+	y, err2 := strconv.Atoi(parts[2])
+	if err1 != nil || err2 != nil {
+		return nil, errors.New("ERROR: invalid room format")
+	}
+
+	if existingRoom, exists := graph.Rooms[name]; exists {
+		if existingRoom.X != x || existingRoom.Y != y {
+			return nil, errors.New("ERROR: duplicate room name with different coordinates")
+		}
+		return existingRoom, nil
+	}
+
+	coordKey := fmt.Sprintf("%d,%d", x, y)
+	for _, room := range graph.Rooms {
+		if room.X == x && room.Y == y && room.Name != name {
+			return nil, fmt.Errorf("ERROR: rooms '%s' and '%s' share the same coordinates (%s)", room.Name, name, coordKey)
+		}
+	}
+
+	newRoom := &Room{Name: name, X: x, Y: y}
+	graph.Rooms[name] = newRoom
+
+	return newRoom, nil
+}
+
+func parseLink(line string, graph *Graph) error {
+	parts := strings.Split(line, "-")
+	if len(parts) != 2 {
+		return errors.New("ERROR: Invalid link format")
+	}
+
+	room1, room2 := parts[0], parts[1]
+	if graph.Rooms[room1] == nil || graph.Rooms[room2] == nil {
+		return nil
+	}
+
+	graph.Rooms[room1].Neighbors = append(graph.Rooms[room1].Neighbors, graph.Rooms[room2])
+	graph.Rooms[room2].Neighbors = append(graph.Rooms[room2].Neighbors, graph.Rooms[room1])
+
+	return nil
+}
+
+func Print() {
+	f, _ := os.Open(os.Args[1])
 	f.Seek(0, 0) // Reset the file pointer to the beginning
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		fmt.Println(scanner.Text())
 	}
 	fmt.Println()
+}
+
+func ReadInput() (string, error) {
+	if len(os.Args) < 2 {
+		return "", errors.New("usage: go run main.go <input_file_name>")
+	}
+	return os.Args[1], nil
 }
