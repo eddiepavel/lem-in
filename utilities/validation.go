@@ -4,18 +4,18 @@ import (
 	"fmt"
 )
 
-func ValidateGraph(graph *Graph) error {
-	if graph == nil {
+func (g *Graph) ValidateGraph() error {
+	if g == nil {
 		return fmt.Errorf("graph is nil")
 	}
-	if graph.Start == nil {
+	if g.Start == nil {
 		return fmt.Errorf("graph start room is nil")
 	}
-	if graph.End == nil {
+	if g.End == nil {
 		return fmt.Errorf("graph end room is nil")
 	}
 
-	queue := []*Room{graph.Start}        // Start from the Start room
+	queue := []*Room{g.Start}            // Start from the Start room
 	visited := make(map[string]struct{}) // Track visited rooms
 
 	// BFS Loop
@@ -27,7 +27,7 @@ func ValidateGraph(graph *Graph) error {
 		visited[current.Name] = struct{}{}
 
 		// Check if we reached the End room
-		if current == graph.End {
+		if current == g.End {
 			return nil // Successfully found a path
 		}
 
