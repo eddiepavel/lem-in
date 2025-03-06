@@ -26,12 +26,21 @@ type Ant struct {
 
 // Represents the ant farm
 type Graph struct {
-	Count int
-	Ants  Ant
-	Paths [][]string
-	Rooms map[string]*Room
-	Start *Room
-	End   *Room
+	Count       int
+	Ants        Ant
+	AllPaths    [][]string
+	FinalPaths  [][]string
+	FinalSteps  int
+	FinalOutput string
+	Rooms       map[string]*Room
+	Start       *Room
+	End         *Room
+}
+
+func NewGraph() *Graph {
+	return &Graph{
+		Rooms: make(map[string]*Room),
+	}
 }
 
 func (g *Graph) ParseInput() error {
@@ -57,11 +66,13 @@ func (g *Graph) ParseInput() error {
 					if startRoom != nil {
 						return errors.New("ERROR: multiple ##start markers")
 					}
+					startRoom = &Room{}
 					phase = "start"
 				} else if line == "##end" {
 					if endRoom != nil {
 						return errors.New("ERROR: multiple ##end markers")
 					}
+					endRoom = &Room{}
 					phase = "end"
 				} else {
 					return errors.New("ERROR: invalid double # marker")
@@ -153,6 +164,10 @@ func (g *Graph) parseRoom(line string, newRoom *Room) error {
 		if room.X == x && room.Y == y && room.Name != name {
 			return fmt.Errorf("ERROR: rooms '%s' and '%s' share the same coordinates (%s)", room.Name, name, coordKey)
 		}
+	}
+
+	if newRoom == nil {
+		newRoom = &Room{}
 	}
 
 	newRoom.X, newRoom.Y, newRoom.Name = x, y, name

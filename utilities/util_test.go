@@ -25,14 +25,16 @@ func TestReadInput(t *testing.T) {
 
 func TestParseInput(t *testing.T) {
 	// Test case 1
-	_, _, err := ParseInput()
+	graph := NewGraph()
+	err := graph.ParseInput()
 	if err == nil {
 		t.Errorf("Test case 1 failed: expected an error but got nil")
 	}
 
 	// Test case 2
 	os.Args = []string{"main.go", "../examples/example00.txt"}
-	_, _, err = ParseInput()
+	graph = NewGraph()
+	err = graph.ParseInput()
 	if err != nil {
 		t.Errorf("Test case 2 failed: expected nil but got %v", err)
 	}
@@ -41,7 +43,7 @@ func TestParseInput(t *testing.T) {
 func TestValidateGraph(t *testing.T) {
 	// Test case 1
 	graph := &Graph{}
-	err := ValidateGraph(graph)
+	err := graph.ValidateGraph()
 	if err == nil {
 		t.Errorf("Test case 1 failed: expected an error but got nil")
 	}
@@ -51,7 +53,7 @@ func TestValidateGraph(t *testing.T) {
 		Start: &Room{},
 		End:   &Room{},
 	}
-	err = ValidateGraph(graph)
+	err = graph.ValidateGraph()
 	if err == nil {
 		t.Errorf("Test case 2 failed: expected an error but got nil")
 	}
@@ -69,7 +71,7 @@ func TestValidateGraph(t *testing.T) {
 			},
 		},
 	}
-	err = ValidateGraph(graph)
+	err = graph.ValidateGraph()
 	if err == nil {
 		t.Errorf("Test case 3 failed: expected an error but got nil")
 	}
@@ -98,7 +100,7 @@ func TestValidateGraph(t *testing.T) {
 		Start: startRoom,
 		End:   endRoom,
 	}
-	err = ValidateGraph(graph)
+	err = graph.ValidateGraph()
 	if err != nil {
 		t.Errorf("Test case 4 failed: expected nil but got %v", err)
 	}
@@ -130,9 +132,9 @@ func TestFindPaths(t *testing.T) {
 	}
 
 	// Test case 1
-	paths := FindPaths(*graph)
-	if len(paths) != 1 {
-		t.Errorf("Test case 1 failed: expected 1 paths but got %d", len(paths))
+	graph.FindPaths()
+	if len(graph.AllPaths) != 1 {
+		t.Errorf("Test case 1 failed: expected 1 path but got %d", len(graph.AllPaths))
 	}
 
 	// Test case 2
@@ -163,9 +165,9 @@ func TestFindPaths(t *testing.T) {
 		End:   endRoom,
 	}
 
-	paths = FindPaths(*graph)
-	if len(paths) != 2 {
-		t.Errorf("Test case 2 failed: expected 2 paths but got %d", len(paths))
+	graph.FindPaths()
+	if len(graph.AllPaths) != 2 {
+		t.Errorf("Test case 2 failed: expected 2 paths but got %d", len(graph.AllPaths))
 	}
 }
 
@@ -198,11 +200,10 @@ func TestFilterPaths(t *testing.T) {
 	}
 
 	// Test case 1
-	paths := FindPaths(*graph)
-	limit := 1
-	filteredPaths := FilterPaths(paths, graph, &limit)
-	if len(filteredPaths) != 1 {
-		t.Errorf("Test case 1 failed: expected 1 paths but got %d", len(filteredPaths))
+	graph.FindPaths()
+	graph.FilterPaths()
+	if len(graph.FinalPaths) != 1 {
+		t.Errorf("Test case 1 failed: expected 1 path but got %d", len(graph.FinalPaths))
 	}
 }
 
@@ -228,6 +229,7 @@ func TestMoveAnts(t *testing.T) {
 
 	// Create graph
 	graph := &Graph{
+		Count: 5,
 		Rooms: map[string]*Room{
 			"start": startRoom,
 			"A":     roomA,
@@ -243,13 +245,13 @@ func TestMoveAnts(t *testing.T) {
 		count:  7,
 	}
 	// Test case 1
-	paths := FindPaths(*graph)
-	antsCount := 5
-	out, count := MoveAnts(paths, antsCount, graph)
-	if out != test.output {
-		t.Errorf("Test case 1 failed: expected %s but got %s", test.output, out)
+	graph.FindPaths()
+	graph.FinalPaths = graph.AllPaths
+	_, _ = graph.MoveAnts()
+	if graph.FinalOutput != test.output {
+		t.Errorf("Test case 1 failed: expected %s but got %s", test.output, graph.FinalOutput)
 	}
-	if count != test.count {
-		t.Errorf("Test case 1 failed: expected %d but got %d", test.count, count)
+	if graph.FinalSteps != test.count {
+		t.Errorf("Test case 1 failed: expected %d but got %d", test.count, graph.FinalSteps)
 	}
 }

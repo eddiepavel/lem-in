@@ -7,7 +7,7 @@ import (
 
 func main() {
 	// validate input
-	graph := &utilities.Graph{}
+	graph := utilities.NewGraph()
 	err := graph.ParseInput()
 	if err != nil {
 		fmt.Println("Parsing failed: ", err)
@@ -24,7 +24,4 @@ func main() {
 	graph.FindPaths()
 	// filter overlapping paths
 	graph.FilterPaths()
-	// move ants
-	output, _ := utilities.MoveAnts(filterPaths, ants, graph)
-	fmt.Println(output)
 }

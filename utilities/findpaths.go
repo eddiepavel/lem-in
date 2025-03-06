@@ -17,7 +17,7 @@ func (g *Graph) findPathsDFS(current *Room, visited map[string]struct{}, current
 
 	// If we reached the end room, add the current path to our results
 	if current == g.End {
-		g.Paths = append(g.Paths, append([]string(nil), *currentPath...))
+		g.AllPaths = append(g.AllPaths, append([]string(nil), *currentPath...))
 	} else {
 		// Explore all neighbors
 		for _, neighbor := range current.Neighbors {
